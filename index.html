@@ -1,33 +1,35 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Трекер диеты</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <div id="auth-section">
-        <h1>Добро пожаловать в Трекер диеты</h1>
+        <h1><i class="fas fa-apple-alt"></i> Добро пожаловать в Трекер диеты</h1>
         <div id="register-form">
             <h2>Регистрация</h2>
             <input type="text" id="username" placeholder="Имя пользователя" required>
             <input type="password" id="password" placeholder="Пароль" required>
-            <button onclick="register()">Зарегистрироваться</button>
+            <button onclick="register()"><i class="fas fa-user-plus"></i> Зарегистрироваться</button>
             <p>Уже есть аккаунт? <a href="#" onclick="showLogin()">Войти</a></p>
         </div>
         <div id="login-form" style="display: none;">
             <h2>Вход</h2>
             <input type="text" id="login-username" placeholder="Имя пользователя" required>
             <input type="password" id="login-password" placeholder="Пароль" required>
-            <button onclick="login()">Войти</button>
+            <button onclick="login()"><i class="fas fa-sign-in-alt"></i> Войти</button>
             <p>Нет аккаунта? <a href="#" onclick="showRegister()">Зарегистрироваться</a></p>
         </div>
     </div>
 
     <div id="main-section" style="display: none;">
-        <h1>Трекер диеты</h1>
-        <button onclick="logout()">Выйти</button>
+        <h1><i class="fas fa-apple-alt"></i> Трекер диеты</h1>
+        <button onclick="logout()"><i class="fas fa-sign-out-alt"></i> Выйти</button>
         <div id="profile-form" style="display: none;">
             <h2>Ваш профиль</h2>
             <input type="number" id="weight" placeholder="Вес (кг)" required>
@@ -44,19 +46,31 @@
                 <option value="gain">Набор массы</option>
                 <option value="maintain">Поддержание</option>
             </select>
-            <button onclick="saveProfile()">Сохранить профиль</button>
+            <button onclick="saveProfile()"><i class="fas fa-save"></i> Сохранить профиль</button>
         </div>
         <div id="dashboard" style="display: none;">
             <h2>Ваша панель</h2>
             <p>Рекомендуемые калории: <span id="calories">0</span> ккал/день</p>
+            <div class="progress-bar">
+                <div id="calories-progress" class="progress-fill"></div>
+            </div>
+            <p id="calories-text">Съедено сегодня: 0 / 0 ккал (0%)</p>
+
             <p>Рекомендуемая вода: <span id="water">0</span> стаканов (по 250 мл)</p>
+            <div class="progress-bar">
+                <div id="water-progress" class="progress-fill"></div>
+            </div>
+            <p id="water-text">Выпито сегодня: 0 / 0 стаканов (0%)</p>
+
             <h3>Сегодняшний прогресс</h3>
             <input type="number" id="calories-consumed" placeholder="Съедено калорий" min="0">
-            <button onclick="logCalories()">Добавить калории</button>
+            <button onclick="logCalories()"><i class="fas fa-utensils"></i> Добавить калории</button>
             <input type="number" id="water-consumed" placeholder="Выпито стаканов воды" min="0">
-            <button onclick="logWater()">Добавить воду</button>
-            <p>Съедено сегодня: <span id="total-calories">0</span> ккал</p>
-            <p>Выпито сегодня: <span id="total-water">0</span> стаканов</p>
+            <button onclick="logWater()"><i class="fas fa-glass-water"></i> Добавить воду</button>
+
+            <h3>График за последние 7 дней</h3>
+            <canvas id="calories-chart" width="400" height="200"></canvas>
+            <canvas id="water-chart" width="400" height="200"></canvas>
         </div>
     </div>
 

@@ -1,0 +1,65 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Трекер диеты</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="auth-section">
+        <h1>Добро пожаловать в Трекер диеты</h1>
+        <div id="register-form">
+            <h2>Регистрация</h2>
+            <input type="text" id="username" placeholder="Имя пользователя" required>
+            <input type="password" id="password" placeholder="Пароль" required>
+            <button onclick="register()">Зарегистрироваться</button>
+            <p>Уже есть аккаунт? <a href="#" onclick="showLogin()">Войти</a></p>
+        </div>
+        <div id="login-form" style="display: none;">
+            <h2>Вход</h2>
+            <input type="text" id="login-username" placeholder="Имя пользователя" required>
+            <input type="password" id="login-password" placeholder="Пароль" required>
+            <button onclick="login()">Войти</button>
+            <p>Нет аккаунта? <a href="#" onclick="showRegister()">Зарегистрироваться</a></p>
+        </div>
+    </div>
+
+    <div id="main-section" style="display: none;">
+        <h1>Трекер диеты</h1>
+        <button onclick="logout()">Выйти</button>
+        <div id="profile-form" style="display: none;">
+            <h2>Ваш профиль</h2>
+            <input type="number" id="weight" placeholder="Вес (кг)" required>
+            <input type="number" id="height" placeholder="Рост (см)" required>
+            <input type="number" id="age" placeholder="Возраст" required>
+            <select id="gender" required>
+                <option value="">Выберите пол</option>
+                <option value="male">Мужской</option>
+                <option value="female">Женский</option>
+            </select>
+            <select id="goal" required>
+                <option value="">Выберите цель</option>
+                <option value="lose">Похудение</option>
+                <option value="gain">Набор массы</option>
+                <option value="maintain">Поддержание</option>
+            </select>
+            <button onclick="saveProfile()">Сохранить профиль</button>
+        </div>
+        <div id="dashboard" style="display: none;">
+            <h2>Ваша панель</h2>
+            <p>Рекомендуемые калории: <span id="calories">0</span> ккал/день</p>
+            <p>Рекомендуемая вода: <span id="water">0</span> стаканов (по 250 мл)</p>
+            <h3>Сегодняшний прогресс</h3>
+            <input type="number" id="calories-consumed" placeholder="Съедено калорий" min="0">
+            <button onclick="logCalories()">Добавить калории</button>
+            <input type="number" id="water-consumed" placeholder="Выпито стаканов воды" min="0">
+            <button onclick="logWater()">Добавить воду</button>
+            <p>Съедено сегодня: <span id="total-calories">0</span> ккал</p>
+            <p>Выпито сегодня: <span id="total-water">0</span> стаканов</p>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

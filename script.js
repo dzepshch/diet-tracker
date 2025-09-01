@@ -1,4 +1,11 @@
-﻿let currentUser = null;
+let currentUser = null;
+let caloriesChart = null;
+let waterChart = null;
+
+function getCurrentDate() {
+    const now = new Date();
+    return now.toISOString().split('T')[0]; // YYYY-MM-DD
+}
 
 function register() {
     const username = document.getElementById('username').value;
@@ -9,7 +16,7 @@ function register() {
             alert('Пользователь уже существует!');
             return;
         }
-        users[username] = { password, profile: null, logs: { calories: 0, water: 0 } };
+        users[username] = { password, profile: null, dailyLogs: {} };
         localStorage.setItem('users', JSON.stringify(users));
         alert('Регистрация успешна! Пожалуйста, войдите.');
         showLogin();
@@ -43,6 +50,8 @@ function showRegister() {
 }
 
 function logout() {
+    if (caloriesChart) caloriesChart.destroy();
+    if (waterChart) waterChart.destroy();
     currentUser = null;
     document.getElementById('main-section').style.display = 'none';
     document.getElementById('auth-section').style.display = 'block';
@@ -51,22 +60,16 @@ function logout() {
 }
 
 function calculateCalories(weight, height, age, gender, goal) {
-    // Формула Миффлина-Сан Жеора для базового метаболизма
     let bmr = gender === 'male' 
         ? 10 * weight + 6.25 * height - 5 * age + 5
         : 10 * weight + 6.25 * height - 5 * age - 161;
-    
-    // Умножаем на коэффициент активности (предполагаем среднюю активность 1.4)
     bmr *= 1.4;
-    
-    // Корректировка в зависимости от цели
-    if (goal === 'lose') return Math.round(bmr * 0.85); // 15% дефицит
-    if (goal === 'gain') return Math.round(bmr * 1.15); // 15% профицит
-    return Math.round(bmr); // Поддержание
+    if (goal === 'lose') return Math.round(bmr * 0.85);
+    if (goal === 'gain') return Math.round(bmr * 1.15);
+    return Math.round(bmr);
 }
 
 function calculateWater(weight) {
-    // 30 мл воды на кг веса, переводим в стаканы (250 мл)
     return Math.round((weight * 30) / 250);
 }
 
@@ -104,22 +107,39 @@ function loadProfile() {
 function updateDashboard() {
     const users = JSON.parse(localStorage.getItem('users'));
     const profile = users[currentUser].profile;
-    const logs = users[currentUser].logs;
+    const dailyLogs = users[currentUser].dailyLogs;
+    const today = getCurrentDate();
+    if (!dailyLogs[today]) {
+        dailyLogs[today] = { calories: 0, water: 0 };
+    }
+    const todayLog = dailyLogs[today];
 
-    const calories = calculateCalories(profile.weight, profile.height, profile.age, profile.gender, profile.goal);
-    const water = calculateWater(profile.weight);
+    const recCalories = calculateCalories(profile.weight, profile.height, profile.age, profile.gender, profile.goal);
+    const recWater = calculateWater(profile.weight);
 
-    document.getElementById('calories').textContent = calories;
-    document.getElementById('water').textContent = water;
-    document.getElementById('total-calories').textContent = logs.calories || 0;
-    document.getElementById('total-water').textContent = logs.water || 0;
+    document.getElementById('calories').textContent = recCalories;
+    document.getElementById('water').textContent = recWater;
+
+    const calPercent = Math.min((todayLog.calories / recCalories) * 100, 100);
+    document.getElementById('calories-progress').style.width = `${calPercent}%`;
+    document.getElementById('calories-text').textContent = `Съедено сегодня: ${todayLog.calories} / ${recCalories} ккал (${Math.round(calPercent)}%)`;
+
+    const waterPercent = Math.min((todayLog.water / recWater) * 100, 100);
+    document.getElementById('water-progress').style.width = `${waterPercent}%`;
+    document.getElementById('water-text').textContent = `Выпито сегодня: ${todayLog.water} / ${recWater} стаканов (${Math.round(waterPercent)}%)`;
+
+    updateCharts(dailyLogs, recCalories, recWater);
 }
 
 function logCalories() {
     const calories = parseInt(document.getElementById('calories-consumed').value);
     if (calories >= 0) {
         const users = JSON.parse(localStorage.getItem('users'));
-        users[currentUser].logs.calories = (users[currentUser].logs.calories || 0) + calories;
+        const today = getCurrentDate();
+        if (!users[currentUser].dailyLogs[today]) {
+            users[currentUser].dailyLogs[today] = { calories: 0, water: 0 };
+        }
+        users[currentUser].dailyLogs[today].calories += calories;
         localStorage.setItem('users', JSON.stringify(users));
         updateDashboard();
         document.getElementById('calories-consumed').value = '';
@@ -132,11 +152,82 @@ function logWater() {
     const water = parseInt(document.getElementById('water-consumed').value);
     if (water >= 0) {
         const users = JSON.parse(localStorage.getItem('users'));
-        users[currentUser].logs.water = (users[currentUser].logs.water || 0) + water;
+        const today = getCurrentDate();
+        if (!users[currentUser].dailyLogs[today]) {
+            users[currentUser].dailyLogs[today] = { calories: 0, water: 0 };
+        }
+        users[currentUser].dailyLogs[today].water += water;
         localStorage.setItem('users', JSON.stringify(users));
         updateDashboard();
         document.getElementById('water-consumed').value = '';
     } else {
         alert('Введите корректное количество воды!');
     }
+}
+
+function updateCharts(dailyLogs, recCalories, recWater) {
+    const dates = [];
+    const calData = [];
+    const waterData = [];
+    const today = new Date();
+    for (let i = 6; i >= 0; i--) {
+        const date = new Date(today);
+        date.setDate(today.getDate() - i);
+        const dateStr = date.toISOString().split('T')[0];
+        dates.push(dateStr);
+        calData.push(dailyLogs[dateStr] ? dailyLogs[dateStr].calories : 0);
+        waterData.push(dailyLogs[dateStr] ? dailyLogs[dateStr].water : 0);
+    }
+
+    if (caloriesChart) caloriesChart.destroy();
+    caloriesChart = new Chart(document.getElementById('calories-chart'), {
+        type: 'line',
+        data: {
+            labels: dates,
+            datasets: [{
+                label: 'Калории',
+                data: calData,
+                borderColor: '#4CAF50',
+                fill: false
+            }, {
+                label: 'Рекомендуемые',
+                data: Array(7).fill(recCalories),
+                borderColor: '#FF6384',
+                borderDash: [5, 5],
+                fill: false
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    });
+
+    if (waterChart) waterChart.destroy();
+    waterChart = new Chart(document.getElementById('water-chart'), {
+        type: 'line',
+        data: {
+            labels: dates,
+            datasets: [{
+                label: 'Вода (стаканы)',
+                data: waterData,
+                borderColor: '#2196F3',
+                fill: false
+            }, {
+                label: 'Рекомендуемые',
+                data: Array(7).fill(recWater),
+                borderColor: '#FF6384',
+                borderDash: [5, 5],
+                fill: false
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    });
 }
